@@ -1,4 +1,4 @@
-# Traffic Crash OLAP Analysis
+# 🚦 Traffic Crash OLAP Analysis
 Repository này chứa đồ án cuối kỳ môn Kho Dữ Liệu (OLAP). Dự án xây dựng hệ thống OLAP phân tích dữ liệu tai nạn giao thông tại Chicago, sử dụng SSIS, SSAS, Power BI, Looker Studio và khai phá dữ liệu.
 
 **Dataset**: [Traffic Crashes - Crashes | Kaggle](https://www.kaggle.com/datasets/anoopjohny/traffic-crashes-crashes/data)
