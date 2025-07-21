@@ -29,10 +29,10 @@ Số vụ theo tháng/năm
 Phân loại nguyên nhân và mức độ nghiêm trọng
 
 ### Data mining project:
-    Áp dụng thuật toán khai phá luật kết hợp (Apriori) để tìm ra các mẫu kết hợp thường xảy ra giữa các yếu tố tai nạn (ví dụ: “Trời mưa” và “Tầm nhìn kém” thường đi kèm với tai nạn nghiêm trọng).
+Áp dụng thuật toán khai phá luật kết hợp (Apriori) để tìm ra các mẫu kết hợp thường xảy ra giữa các yếu tố tai nạn (ví dụ: “Trời mưa” và “Tầm nhìn kém” thường đi kèm với tai nạn nghiêm trọng).
 
 ## The information of group.txt
-    Thành viên và vai trò.
+Thành viên và vai trò.
 
 📄 Báo cáo tổng hợp:
 Tài liệu tổng hợp quá trình thực hiện, gồm:
