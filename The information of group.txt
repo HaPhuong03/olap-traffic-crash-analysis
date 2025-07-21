@@ -1,0 +1,15 @@
+Thành viên nhóm:
+*Nguyễn Hạ Phương - 22521166:
+ - CHƯƠNG 1 - GIỚI THIỆU TỔNG QUAN: Phân tích các thuộc tính, xây dựng sơ đồ, chọn câu truy vấn.
+ - CHƯƠNG 2 - SSIS: thực hiện quá trình SSIS và quay video.
+ - CHƯƠNG 3 - SSAS: thực hiện chung.
+ - CHƯƠNG 4 - SSRS: Report PowerBI
+ - CHƯƠNG 5 - DATA MINING: Khai phá dữ lieu, Thuật toán Logistic Regression và LightGBM 
+*Lê Châu Khánh Vy- 22521704:
+ - CHƯƠNG 1 - GIỚI THIỆU TỔNG QUAN: Tiền xử lý dữ liệu, xây dựng sơ đồ, chọn câu truy vấn.
+ - CHƯƠNG 2 - SSIS: thực hiện quá trình SSIS và viết báo cáo.
+ - CHƯƠNG 3 - SSAS: thực hiện chung
+ - CHƯƠNG 4 - SSRS: Report Locker
+ - CHƯƠNG 5 - DATA MINING:Khai phá dữ lieu, Thuật toán XGBoost và Random Forest
+ 
+

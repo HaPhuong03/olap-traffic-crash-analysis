@@ -1,0 +1,442 @@
+﻿
+//Câu 1 Liệt kê top 10 vụ tai nạn giao thông có số lượng tử vong cao nhất (sắp xếp theo số lượng giảm dần).
+SELECT
+    {[Measures].[Injuries Fatal]} ON COLUMNS,
+    ORDER(
+        TOPCOUNT(
+            [Dim Primary Causes].[PRIM CONTRIBUTORY CAUSE].[PRIM CONTRIBUTORY CAUSE].MEMBERS,
+            10,
+            [Measures].[Injuries Fatal]
+        ),
+        [Measures].[Injuries Fatal],
+        DESC
+    ) ON ROWS
+FROM [Traffic Crash];
+
+
+//Câu 2 Thống kê tỉ lệ tử vong và bị thương nặng của nạn nhân trong các nhân tố trực tiếp dẫn đến vụ tai nạn (FIRST_CRASH_TYPE).
+
+WITH 
+MEMBER [Measures].[Fatality and Serious Injury Ratio (%)] AS 
+    IIF(
+        [Measures].[Injuries Total] = 0,
+        NULL,
+        ([Measures].[Injuries Fatal] + [Measures].[Injuries Incapacitating]*100) 
+        / [Measures].[Injuries Total]
+    )
+
+SELECT 
+    {[Measures].[Fatality and Serious Injury Ratio (%)]} ON COLUMNS,
+    [Dim First Crash Types].[FIRST CRASH TYPE].[FIRST CRASH TYPE].MEMBERS ON ROWS
+FROM 
+    [Traffic Crash];
+
+//Câu 3	Liệt kê các thông số về chấn thương do tai nạn giao thông từ 2016 đến 2023.
+SELECT 
+    {[Measures].[Injuries Fatal], 
+	[Measures].[Injuries Incapacitating], 
+	[Measures].[Injuries Non Incapacitating], 
+	[Measures].[Injuries No Indication],
+	[Measures].[Number of Traffic Crash Records]} ON COLUMNS,
+    [Dim Time].[CRASH YEAR].&[2016]:[Dim Time].[CRASH YEAR].&[2023] ON ROWS
+FROM [Traffic Crash];
+
+
+
+
+//Câu 4	Trong 10 nguyên nhân gây va chạm giao thông phổ biến nhất ở mỗi năm, thống kê số lượng nạn nhân tử vong, bị thương nặng và bị thương nhẹ ở mỗi nguyên nhân từ năm 2021 đến năm 2023 khi điều kiện thời tiết là “CLEAR”. 
+//Ở đây ta sẽ không tính nguyên nhân là “NOT APPLICABLE” và “UNABLE TO DETERMINE” vì đây là hai nguyên nhân không xác định.
+
+SELECT 
+    {[Measures].[Injuries Fatal],  [Measures].[Injuries Incapacitating], [Measures].[Injuries Non Incapacitating]} ON COLUMNS,
+
+    NON EMPTY 
+    GENERATE(
+        {[Dim Time].[CRASH YEAR].&[2020],[Dim Time].[CRASH YEAR].&[2021], [Dim Time].[CRASH YEAR].&[2022], [Dim Time].[CRASH YEAR].&[2023]},  -- Các năm cần lọc
+        TOPCOUNT(
+            FILTER(
+                NONEMPTY(
+                    [Dim Time].[CRASH YEAR].CurrentMember * 
+                    EXCEPT(
+                        [Dim Primary Causes].[PRIM CONTRIBUTORY CAUSE].[PRIM CONTRIBUTORY CAUSE].MEMBERS,  -- Tất cả nguyên nhân
+                        {
+                            [Dim Primary Causes].[PRIM CONTRIBUTORY CAUSE].[NOT APPLICABLE],  -- Loại trừ nguyên nhân không mong muốn 1
+                            [Dim Primary Causes].[PRIM CONTRIBUTORY CAUSE].[UNABLE TO DETERMINE]  -- Loại trừ nguyên nhân không mong muốn 2
+                        }
+                    )
+                ),
+                [Dim Weather Conditions].[WEATHER CONDITION].&[CLEAR] 
+				
+            ),
+            10, 
+            [Measures].[Number of Traffic Crash Records]
+        )
+    ) ON ROWS
+FROM [Traffic Crash];
+
+
+//Cau 5 Liệt kê top 10 con đường có nhiều vị trí xảy ra tai nạn giao thông nhất, cùng với hướng đường và số địa điểm đã xảy ra va chạm giao thông ở mỗi hướng đường của con đường đó.
+
+SELECT 
+    {
+        [Measures].[Number of Locations]  -- Số lượng vị trí tai nạn
+    } ON COLUMNS,
+
+    NONEMPTY(
+        CROSSJOIN(
+            TOPCOUNT(
+                [Dim Street].[STREET NAME].[STREET NAME].MEMBERS, 
+                10,  -- Lấy 10 tên đường
+                [Measures].[Number of Locations]  -- Sắp xếp theo số lượng vị trí tai nạn
+            ),
+            [Dim Location Streets].[STREET DIRECTION].[STREET DIRECTION].MEMBERS  -- Các hướng đường
+        ),
+        [Measures].[Number of Locations]  
+    ) ON ROWS
+
+FROM [Traffic Crash];
+
+//Câu 6 Thống kê số lượng các vụ va chạm giao thông cho từng mức độ thiệt hại theo từng tháng trong năm 2023.
+
+WITH 
+    MEMBER [Measures].[Accident Count Less 500] AS 
+        SUM(
+            FILTER(
+                [Dim Damages].[DAMAGE].[DAMAGE].MEMBERS, 
+                [Dim Damages].[DAMAGE].CURRENTMEMBER IS [Dim Damages].[DAMAGE].[500 OR LESS]
+            ),
+            [Measures].[Number of Traffic Crash Records]  -- Sử dụng số lượng vụ tai nạn
+        )
+
+    MEMBER [Measures].[Accident Count 501 1500] AS 
+        SUM(
+            FILTER(
+                [Dim Damages].[DAMAGE].[DAMAGE].MEMBERS, 
+                [Dim Damages].[DAMAGE].CURRENTMEMBER IS [Dim Damages].[DAMAGE].[501 - 1.500]
+            ),
+            [Measures].[Number of Traffic Crash Records]
+        )
+
+    MEMBER [Measures].[Accident Count Over 1500] AS 
+        SUM(
+            FILTER(
+                [Dim Damages].[DAMAGE].[DAMAGE].MEMBERS, 
+                [Dim Damages].[DAMAGE].CURRENTMEMBER IS [Dim Damages].[DAMAGE].[OVER 1.500]
+            ),
+            [Measures].[Number of Traffic Crash Records]
+        )
+
+SELECT 
+    {
+        [Measures].[Accident Count Less 500],
+        [Measures].[Accident Count 501 1500],
+        [Measures].[Accident Count Over 1500]
+    } ON COLUMNS,
+
+    [Dim Time].[CRASH MONTH].[CRASH MONTH].MEMBERS ON ROWS  -- Các tháng trong năm 2023
+
+FROM 
+    [Traffic Crash]
+WHERE 
+    (
+        [Dim Time].[CRASH YEAR].[CRASH YEAR].&[2023]  -- Chọn năm 2023
+    );
+
+
+//Câu 7 Thống kê số nạn nhân bị thương ở mỗi vụ tai nạn [(số nạn nhân tử vong + bị thương nặng + bị thương nhẹ) / số vụ tai nạn] 
+//xảy ra ở loại cấu trúc đường cong (ALIGNMENT có kí tự “CURVE”) khi trời tối (LIGHTING CONDITION có kí tự “DARK” trong tên) qua từng năm (từ 2016 đến 2023).
+
+WITH 
+    MEMBER [Measures].[InjuryCount] AS 
+        ([Measures].[Injuries Fatal] + [Measures].[Injuries Incapacitating] + [Measures].[Injuries Non Incapacitating])  -- Tổng số nạn nhân tử vong và bị thương
+
+    MEMBER [Measures].[InjuryRatio] AS
+        IIF(
+            [Measures].[Number of Traffic Crash Records] > 0, 
+            [Measures].[InjuryCount] / [Measures].[Number of Traffic Crash Records],  -- Tính tỷ lệ tử vong/bị thương
+            NULL
+        )
+
+SELECT 
+    {
+        [Measures].[InjuryCount], 
+        [Measures].[Number of Traffic Crash Records], 
+        [Measures].[InjuryRatio] 
+    } ON COLUMNS,
+
+    [Dim Time].[CRASH YEAR].[CRASH YEAR].MEMBERS ON ROWS  
+
+FROM 
+    [Traffic Crash]
+
+WHERE 
+    (
+        FILTER(
+            EXISTING [Dim Road Alignment].[ALIGNMENT].[ALIGNMENT].MEMBERS, 
+            INSTR([Dim Road Alignment].[ALIGNMENT].CURRENTMEMBER.NAME, "CURVE") > 0  -- Điều kiện chứa từ "CURVE" trong tên
+        ),
+        FILTER(
+            EXISTING [Dim Lighting Conditions].[LIGHTING CONDITION].[LIGHTING CONDITION].MEMBERS,
+            INSTR([Dim Lighting Conditions].[LIGHTING CONDITION].CURRENTMEMBER.NAME, "DARK") > 0  -- Điều kiện ánh sáng chứa từ "DARK"
+        )
+    );
+
+
+
+//Câu 8 Thống kê số lượng phương tiện va chạm nhiều nhất trong một vụ tai nạn giao thông ở các nguyên nhân.
+
+SELECT 
+    {
+        [Measures].[Max Number of Units]
+    } ON COLUMNS,
+
+    NONEMPTY(
+        GENERATE(
+            [Dim Primary Causes].[PRIM CONTRIBUTORY CAUSE].[PRIM CONTRIBUTORY CAUSE].MEMBERS,
+            {[Dim Primary Causes].[PRIM CONTRIBUTORY CAUSE].CURRENTMEMBER}
+        )
+    ) ON ROWS
+
+FROM 
+    [Traffic Crash];
+
+
+//Câu 9 Thống kê tổng số nạn nhân, số vụ tai nạn theo từng thiết bị điều khiển (TRAFFIC CONTROL DEVICE) và từng nguyên nhân (PRIM CONTRIBUTORY CAUSE bắt đầu bằng ký tự 'F').
+
+
+SELECT 
+    {
+        [Measures].[Injuries Total],  -- Tổng số nạn nhân 
+        [Measures].[Number of Traffic Crash Records]  -- Số vụ tai nạn
+    } ON COLUMNS,
+
+    NONEMPTY(
+        CROSSJOIN(
+            [Dim Traffic Control].[TRAFFIC CONTROL DEVICE].[TRAFFIC CONTROL DEVICE].MEMBERS,  -- Các thiết bị điều khiển
+            FILTER(
+                [Dim Primary Causes].[PRIM CONTRIBUTORY CAUSE].MEMBERS,  -- Các nguyên nhân
+                LEFT([Dim Primary Causes].[PRIM CONTRIBUTORY CAUSE].CURRENTMEMBER.NAME, 1) = "F"  -- Nguyên nhân bắt đầu bằng 'D'
+            )
+        )
+    ) ON ROWS
+
+FROM 
+    [Traffic Crash];
+
+
+
+//Câu 10 Thống kê tổng số lượng vụ tai nạn và số lượng tử vong ở mỗi vụ tai nạn qua từng tháng và quý trong năm (từ 2016 đến 2023) do nguyên nhân ‘ANIMAL’.
+
+
+SELECT
+    NON EMPTY { 
+        [Measures].[Number of Traffic Crash Records], 
+        [Measures].[Injuries Total],
+		[Measures].[Injuries Fatal]
+    } ON COLUMNS,
+
+    NON EMPTY {
+        DrillDownLevel(
+            DrillDownLevel(
+                DrillDownLevel(
+                    [Dim Time].[PHANCAP_TIME]
+                )
+            )
+        )
+    } ON ROWS
+FROM 
+    [Traffic Crash]
+WHERE {
+	[Dim Primary Causes].[PRIM CONTRIBUTORY CAUSE].&[ANIMAL]
+	};
+
+
+
+//Câu 11 Thống kê các nguyên nhân gây tai nạn ở mỗi loại đường (TRAFFICWAY TYPE) với số lượng tử vong lớn hơn hoặc bằng 6.
+
+WITH 
+SET [TopCausesByTrafficWay] AS 
+    GENERATE(
+        [Dim Road Alignment].[TRAFFICWAY TYPE].[TRAFFICWAY TYPE].MEMBERS,
+        CROSSJOIN(
+            {[Dim Road Alignment].[TRAFFICWAY TYPE].CURRENTMEMBER},
+           
+                FILTER(
+                    [Dim Primary Causes].[PRIM CONTRIBUTORY CAUSE].[PRIM CONTRIBUTORY CAUSE].MEMBERS,
+                    ([Measures].[Injuries Fatal], [Dim Road Alignment].[TRAFFICWAY TYPE].CURRENTMEMBER) >= 6  
+                )
+        )
+    )
+
+SELECT 
+    NON EMPTY { 
+        [Measures].[Number of Traffic Crash Records], 
+        [Measures].[Injuries Fatal] 
+    } ON COLUMNS,
+
+    NON EMPTY { 
+        [TopCausesByTrafficWay] 
+    } ON ROWS
+
+FROM 
+    [Traffic Crash];
+
+//Câu 12 Liệt kê các loại đường giao thông (TRAFFICWAY TYPE) là top 5 loại đường xảy ra nhiều vụ tai nạn nhất trong cả hai năm 2022 và 2023.
+
+WITH
+-- Get the top 5 trafficway types with the most crashes in 2022
+SET [Top5CrashTrafficWays2022] AS
+    TOPCOUNT(
+        [Dim Road Alignment].[TRAFFICWAY TYPE].[TRAFFICWAY TYPE].MEMBERS,
+        5,
+        ([Measures].[Number of Traffic Crash Records], [Dim Time].[PHANCAP_Time].&[2022])
+    )
+
+-- Get the top 5 trafficway types with the most crashes in 2023
+SET [Top5CrashTrafficWays2023] AS
+    TOPCOUNT(
+        [Dim Road Alignment].[TRAFFICWAY TYPE].[TRAFFICWAY TYPE].MEMBERS,
+        5,
+        ([Measures].[Number of Traffic Crash Records], [Dim Time].[PHANCAP_Time].&[2023])
+    )
+
+-- Find the intersection of the two sets to get common road types
+SET [IntersectionTopTrafficWays] AS
+    INTERSECT(
+        [Top5CrashTrafficWays2022],
+        [Top5CrashTrafficWays2023]
+    )
+
+-- Calculate totals for 2022 and 2023 for the intersection traffic ways
+MEMBER [Measures].[Total Number of Traffic Crash Records] AS
+    AGGREGATE(
+        {[Dim Time].[PHANCAP_Time].&[2022], [Dim Time].[PHANCAP_Time].&[2023]},
+        [Measures].[Number of Traffic Crash Records]
+    )
+
+MEMBER [Measures].[Total Injuries Fatal] AS
+    AGGREGATE(
+        {[Dim Time].[PHANCAP_Time].&[2022], [Dim Time].[PHANCAP_Time].&[2023]},
+        [Measures].[Injuries Fatal]
+    )
+
+MEMBER [Measures].[Total Injuries] AS
+    AGGREGATE(
+        {[Dim Time].[PHANCAP_Time].&[2022], [Dim Time].[PHANCAP_Time].&[2023]},
+        [Measures].[Injuries Total]
+    )
+
+SELECT
+    NON EMPTY {
+        [Measures].[Total Number of Traffic Crash Records],
+		[Measures].[Total Injuries],
+        [Measures].[Total Injuries Fatal]
+        
+    } ON COLUMNS,
+
+    NON EMPTY {
+        [IntersectionTopTrafficWays]
+    } ON ROWS
+
+FROM 
+    [Traffic Crash];
+
+
+
+
+//Câu 13 Thống kê top 3 khung giờ xảy ra nhiều vụ tai nạn nhất của các ngày trong tuần.
+
+SELECT 
+    {[Measures].[Number of Traffic Crash Records]} ON COLUMNS,
+    
+    NONEMPTY(
+        GENERATE(
+            [Dim Time].[CRASH DAY OF WEEK].[CRASH DAY OF WEEK].MEMBERS,
+            TOPCOUNT(
+                ([Dim Time].[CRASH DAY OF WEEK].CURRENTMEMBER, [Dim Time].[CRASH HOUR].[CRASH HOUR].MEMBERS),
+                3,
+                [Measures].[Number of Traffic Crash Records]
+            )
+        )
+    ) ON ROWS
+
+FROM 
+    [Traffic Crash];
+
+
+
+//Cau 14 Thống kê Top 5 nguyên nhân phổ biến nhất xuất hiện ở một trong các tập hợp: ({Nguyên nhân gây tử vong trung bình cao nhất}, {Nguyên nhân gây thiệt hại về tài sản cao nhất (OVER 1.500)}, {Nguyên nhân gây ra số lượng tử vong cao nhất khi tốc độ không vượt quá 40}) trong năm 2020
+WITH
+-- Tập hợp top 5 nguyên nhân có trung bình số lượng tử vong cao nhất
+SET [Top5FatalAverageCauses] AS 
+    TOPCOUNT(
+        FILTER(
+            [Dim Primary Causes].[PRIM CONTRIBUTORY CAUSE].[PRIM CONTRIBUTORY CAUSE].MEMBERS,
+            [Measures].[Average Injuries Fatal] > 0  
+        ),
+        5,
+        [Measures].[Average Injuries Fatal]  
+    )
+-- Tập hợp top 5 nguyên nhân gây thiệt hại tài sản OVER 1.500 nhiều nhất
+SET [Top5ModerateDamageCauses] AS 
+    TOPCOUNT(
+        FILTER(
+            [Dim Primary Causes].[PRIM CONTRIBUTORY CAUSE].[PRIM CONTRIBUTORY CAUSE].MEMBERS,
+            ([Dim Damages].[DAMAGE].&[OVER 1.500])
+        ),
+        5,
+        [Measures].[Number of Traffic Crash Records]
+    )
+
+-- Tập hợp top 5 nguyên nhân gây thiệt hại cao nhất về số người tử vong khi tốc độ dưới 20
+SET [Top5FatalInjuryCausesUnder40Speed] AS 
+    TOPCOUNT(
+        FILTER(
+            [Dim Primary Causes].[PRIM CONTRIBUTORY CAUSE].[PRIM CONTRIBUTORY CAUSE].MEMBERS,
+           ([Measures].[Injuries Fatal] > 0 AND [Dim Traffic Control].[POSTED SPEED LIMIT] <= 40)
+        ),
+        5,
+        [Measures].[Injuries Fatal]
+    )
+
+-- Kết hợp ba tập hợp trên bằng UNION
+SET [UnionTopCrashCauses] AS 
+    UNION(
+        UNION([Top5FatalAverageCauses], [Top5ModerateDamageCauses]),
+        [Top5FatalInjuryCausesUnder40Speed]
+    )
+
+SELECT 
+    {[Measures].[Number of Traffic Crash Records], [Measures].[Injuries Fatal], [Average Injuries Fatal]} ON COLUMNS,
+    [UnionTopCrashCauses] ON ROWS
+
+FROM 
+    [Traffic Crash]
+WHERE
+ ([Dim Time].[CRASH YEAR].&[2020]); 
+
+
+
+
+//Cau 15 Thống kê số vụ tai nạn và số lượng tử vong trong các điều kiện thời tiết ('SNOW', 'RAIN', 'CLOUDY/OVERCAST', 'CLEAR') ở từng quý từ năm 2020 đến 2023
+
+SELECT {[Measures].[Number of Traffic Crash Records], [Measures].[Injuries Fatal]} ON COLUMNS,
+NONEMPTY({
+    [Dim Time].[CRASH YEAR].&[2020]: [Dim Time].[CRASH YEAR].&[2023]
+    * [Dim Time].[CRASH QUARTER].CHILDREN
+    * {
+        [Dim Weather Conditions].[WEATHER CONDITION].&[SNOW],
+		[Dim Weather Conditions].[WEATHER CONDITION].&[RAIN],
+		[Dim Weather Conditions].[WEATHER CONDITION].&[CLOUDY/OVERCAST],
+		[Dim Weather Conditions].[WEATHER CONDITION].&[CLEAR]
+    }
+}) ON ROWS
+FROM [Traffic Crash];
+
+
+
+
+
+
+
+
