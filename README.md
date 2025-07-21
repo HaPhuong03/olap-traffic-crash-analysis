@@ -7,25 +7,51 @@ Repository này chứa đồ án cuối kỳ môn Kho Dữ Liệu (OLAP). Dự �
 
 ## Cấu Trúc Dự Án
 
-### 1. Data
-- Dữ liệu thô tải từ Kaggle
+### Excel Pivot file: 
+Bao gồm các bảng tổng hợp (Pivot Table) giúp trực quan hóa số liệu tai nạn giao thông theo các chiều như thời gian, loại tai nạn, địa điểm...
 
-### 2. Source
-- Dự án SSIS (ETL)
-- Dự án SSAS (Xây dựng Cube, thiết kế Star/Snow Schema)
-- File Excel có Pivot Table
+### SSIS project:
+Gói ETL được xây dựng bằng SQL Server Integration Services (SSIS), thực hiện:
+Tải dữ liệu từ nguồn CSV (Kaggle)
+Làm sạch và chuyển đổi dữ liệu
+Nạp vào hệ quản trị cơ sở dữ liệu (SQL Server)
 
-### 3. Database
-- File cơ sở dữ liệu kho: .mdf, .ldf
+### SSAS project:
+Mô hình OLAP (Star Schema) xây dựng bằng SQL Server Analysis Services (SSAS), bao gồm:
+Thiết kế Data Cube
+Tạo các Measure và Dimension
+Triển khai truy vấn MDX để phân tích dữ liệu
   
 
-### 6. Document
-- Final report (`.docx`)
+### SSRS project:
+Báo cáo được thiết kế bằng SQL Server Reporting Services (SSRS), thể hiện các biểu đồ và bảng dữ liệu phân tích kết quả tai nạn giao thông:
+Số vụ theo tháng/năm
+Phân loại nguyên nhân và mức độ nghiêm trọng
+
+### Data mining project:
+    Áp dụng thuật toán khai phá luật kết hợp (Apriori) để tìm ra các mẫu kết hợp thường xảy ra giữa các yếu tố tai nạn (ví dụ: “Trời mưa” và “Tầm nhìn kém” thường đi kèm với tai nạn nghiêm trọng).
+
+## The information of group.txt
+    Thành viên và vai trò.
+
+📄 Báo cáo tổng hợp:
+Tài liệu tổng hợp quá trình thực hiện, gồm:
+
+Giới thiệu đề tài và dữ liệu
+
+Các công cụ và quy trình thực hiện (ETL, OLAP, Visualization, Mining)
+
+Kết quả và phân tích
+
+Kết luận và đề xuất cải tiến
+
+👉 Được trình bày theo cấu trúc khoa học, phục vụ cho việc trình bày và đánh giá đồ án môn học Kho dữ liệu.
 
 ---
 
-## 👥 Team Info
 
-Xem file Text file/group_info.txt để biết tên thành viên và vai trò.
 
----
+
+
+
+
