@@ -32,7 +32,6 @@ Khám phá và phân tích dữ liệu với các thuật toán học máy (Logi
 Tài liệu báo cáo tổng hợp toàn bộ nội dung đồ án, trình bày chi tiết từng giai đoạn thực hiện, bao gồm:
 
     1. Giới thiệu đề tài và tập dữ liệu sử dụng: Trình bày bối cảnh, mục tiêu và nguồn dữ liệu phân tích.
-    
     2. Thiết kế và xây dựng kho dữ liệu: Mô tả quá trình xác định bảng Dim và Fact, thiết kế mô hình dữ liệu dạng Star Schema.
     
     3. Tích hợp dữ liệu bằng SSIS: Thực hiện quy trình ETL (Extract – Transform – Load) để trích xuất, xử lý và nạp dữ liệu vào kho dữ liệu.
@@ -47,10 +46,6 @@ Tài liệu báo cáo tổng hợp toàn bộ nội dung đồ án, trình bày 
 
 ### The information of group.txt
 Thành viên và vai trò.
-
-
----
-
 
 
 
